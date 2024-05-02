@@ -2,6 +2,8 @@
 
 使用 `adb shell getevent` 记录 Android 设备触屏事件并模拟 maimai 触摸屏幕的脚本.
 
+此 branch 适用于使用 [Type A 类型的触摸驱动](https://www.kernel.org/doc/Documentation/input/multi-touch-protocol.txt)的设备。
+
 ## 使用方法
 
 1. 请先将游戏配置文件中 `DummyTouchPanel` 的值改为 `0`

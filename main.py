@@ -140,7 +140,8 @@ class SerialManager:
     #     return bytes.fromhex(s)
 
     def build_touch_package(self, sl):
-        sum_list = [sum(2 ** j for j, val in enumerate(row) if val == 1) for row in sl]
+        sum_list = [sum(2 ** j for j, val in enumerate(row) if val == 1)
+                    for row in sl]
         hex_list = [hex(i)[2:].zfill(2).upper() for i in sum_list]
         s = "28 " + " ".join(hex_list) + " 29"
         # print(s)
@@ -169,7 +170,8 @@ def restart_script():
 
 
 def microsecond_sleep(sleep_time):
-    end_time = time.perf_counter() + (sleep_time - 1.0) / 1e6  # 1.0是时间补偿，需要根据自己PC的性能去实测
+    end_time = time.perf_counter() + (sleep_time - 1.0) / \
+        1e6  # 1.0是时间补偿，需要根据自己PC的性能去实测
     while time.perf_counter() < end_time:
         pass
 
@@ -179,8 +181,10 @@ def get_colors_in_area(x, y):
     colors = set()  # 使用集合来存储颜色值，以避免重复
     num_points = AREA_POINT_NUM  # 要获取的点的数量
     angle_increment = 360.0 / num_points  # 角度增量
-    cos_values = [math.cos(math.radians(i * angle_increment)) for i in range(num_points)]
-    sin_values = [math.sin(math.radians(i * angle_increment)) for i in range(num_points)]
+    cos_values = [math.cos(math.radians(i * angle_increment))
+                  for i in range(num_points)]
+    sin_values = [math.sin(math.radians(i * angle_increment))
+                  for i in range(num_points)]
     # 处理中心点
     if 0 <= x < exp_image_width and 0 <= y < exp_image_height:
         colors.add(get_color_name(exp_image.getpixel((x, y))))
@@ -213,7 +217,8 @@ def convert(touch_data):
     # print("Touched:", touched)
     touch_keys_list = list(touch_keys)
     if not convert_cache == touch_keys_list:
-        copy_exp_list = [[1 if item in touch_keys_list else 0 for item in sublist] for sublist in copy_exp_list]
+        copy_exp_list = [[1 if item in touch_keys_list else 0 for item in sublist]
+                         for sublist in copy_exp_list]
         # print(copy_exp_list)
         serial_manager.change_touch(copy_exp_list, touch_keys_list)
         convert_cache = touch_keys_list
@@ -249,13 +254,12 @@ def convert(touch_data):
 def getevent():
     # 存储多点触控数据的列表
     touch_data = [{"p": False, "x": 0, "y": 0} for _ in range(MAX_SLOT)]
-    # 记录当前按下的触控点数目
-    touch_sum = 0
     # 记录当前选择的 SLOT 作为索引
     touch_index = 0
 
     # 执行 adb shell getevent 命令并捕获输出
-    process = subprocess.Popen(['adb', 'shell', 'getevent', '-l'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    process = subprocess.Popen(
+        ['adb', 'shell', 'getevent', '-l'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     key_is_changed = False
 
     # 读取实时输出
@@ -267,15 +271,19 @@ def getevent():
             if event_type == 'ABS_MT_POSITION_X':
                 key_is_changed = True
                 if not ANDROID_REVERSE_MONITOR:
-                    touch_data[touch_index]["x"] = int(int(event_value, 16) * abs_multi_x)
+                    touch_data[touch_index]["x"] = int(
+                        int(event_value, 16) * abs_multi_x)
                 else:
-                    touch_data[touch_index]["x"] = ANDROID_ABS_MONITOR_SIZE[0] - int(int(event_value, 16) * abs_multi_x)
+                    touch_data[touch_index]["x"] = ANDROID_ABS_MONITOR_SIZE[0] - \
+                        int(int(event_value, 16) * abs_multi_x)
             elif event_type == 'ABS_MT_POSITION_Y':
                 key_is_changed = True
                 if not ANDROID_REVERSE_MONITOR:
-                    touch_data[touch_index]["y"] = int(int(event_value, 16) * abs_multi_y)
+                    touch_data[touch_index]["y"] = int(
+                        int(event_value, 16) * abs_multi_y)
                 else:
-                    touch_data[touch_index]["y"] = ANDROID_ABS_MONITOR_SIZE[1] - int(int(event_value, 16) * abs_multi_y)
+                    touch_data[touch_index]["y"] = ANDROID_ABS_MONITOR_SIZE[1] - \
+                        int(int(event_value, 16) * abs_multi_y)
             elif event_type == 'SYN_REPORT':
                 if not key_is_changed:
                     continue
@@ -285,22 +293,17 @@ def getevent():
                 # start_time = time.perf_counter()
                 convert(touch_data)
                 # print("单次执行时间:", (time.perf_counter() - start_time) * 1e3, "毫秒")
-            elif event_type == 'ABS_MT_SLOT':
-                key_is_changed = True
-                touch_index = int(event_value, 16)
-                if touch_index >= touch_sum:
-                    touch_sum = touch_index + 1
             elif event_type == 'ABS_MT_TRACKING_ID':
                 key_is_changed = True
                 if event_value == "ffffffff":
                     touch_data[touch_index]['p'] = False
-                    touch_sum = max(0, touch_sum - 1)
                 else:
+                    touch_index = int(event_value, 16)
                     touch_data[touch_index]['p'] = True
-                    touch_sum += 1
             elif event_type == 'BTN_TOUCH':
                 if event_value == 'UP':
-                    touch_data = [{"p": False, "x": 0, "y": 0} for _ in range(MAX_SLOT)]
+                    touch_data = [{"p": False, "x": 0, "y": 0}
+                                  for _ in range(MAX_SLOT)]
                     key_is_changed = True
                     # 清空所有输出
             else:
